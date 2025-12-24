@@ -5,7 +5,7 @@ export class InMemoryUserRepository implements UserRepository {
   private users: User[] = [];
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async save(user: User): Promise<void> {
+  async create(user: User): Promise<void> {
     this.users.push(user);
   }
 
