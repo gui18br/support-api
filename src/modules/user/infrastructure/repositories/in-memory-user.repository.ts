@@ -13,4 +13,15 @@ export class InMemoryUserRepository implements UserRepository {
   async findByEmail(email: string): Promise<User | null> {
     return this.users.find((user) => user.email === email) || null;
   }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async updateUser(user: User): Promise<User> {
+    const index = this.users.findIndex(
+      (userFind) => userFind.email === user.email,
+    );
+
+    this.users[index] = user;
+
+    return this.users[index];
+  }
 }
