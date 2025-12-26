@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { User } from '../../domain/entities/user.entity';
-import { UserDTO } from '../dtos/user.dto';
+import { CreateUserDTO } from '../dtos/create-user.dto';
 import { PasswordHasher } from '../ports/password-hasher';
 import { UserRole } from '../../domain/enums/user-role.enum';
 import { CreateUserResponseDTO } from '../dtos/create-user-response.dto';
@@ -15,11 +15,11 @@ export class CreateUserUseCase {
     private readonly tokenGenerator: TokenGenerator,
   ) {}
 
-  async execute(dto: UserDTO): Promise<CreateUserResponseDTO> {
+  async execute(dto: CreateUserDTO): Promise<CreateUserResponseDTO> {
     const userAlreadyExists = await this.userRepository.findByEmail(dto.email);
     if (userAlreadyExists) throw new ConflictException('User already exists');
 
-    const passwordHash = await this.passwordHasher.hash(dto.password!);
+    const passwordHash = await this.passwordHasher.hash(dto.password);
 
     const user = new User(
       randomUUID(),
