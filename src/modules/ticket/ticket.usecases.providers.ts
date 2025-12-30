@@ -1,5 +1,6 @@
 import { UserRepository } from '../user/domain/repositories/user.repository';
 import { CreateTicketUseCase } from './application/use-cases/create-ticket.usecase';
+import { GetTicketUseCase } from './application/use-cases/get-ticket.usecase';
 import { TicketRepository } from './domain/repositories/ticket.repository';
 
 export const ticketUseCasesProviders = [
@@ -10,5 +11,11 @@ export const ticketUseCasesProviders = [
       userRepository: UserRepository,
     ) => new CreateTicketUseCase(ticketRepository, userRepository),
     inject: ['TicketRepository', 'UserRepository'],
+  },
+  {
+    provide: GetTicketUseCase,
+    useFactory: (ticketRepository: TicketRepository) =>
+      new GetTicketUseCase(ticketRepository),
+    inject: ['TicketRepository'],
   },
 ];

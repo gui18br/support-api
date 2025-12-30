@@ -4,7 +4,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Ticket } from '../../domain/entities/ticket.entity';
 import { TicketRepository } from '../../domain/repositories/ticket.repository';
 import { CreateTicketDTO } from '../dtos/create-ticket.dto';
-import { CreateTicketResponseDTO } from '../dtos/create-ticket-response.dto';
+import { TicketResponseDTO } from '../dtos/create-ticket-response.dto';
 import { UserRepository } from 'src/modules/user/domain/repositories/user.repository';
 
 export class CreateTicketUseCase {
@@ -13,7 +13,7 @@ export class CreateTicketUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(dto: CreateTicketDTO): Promise<CreateTicketResponseDTO> {
+  async execute(dto: CreateTicketDTO): Promise<TicketResponseDTO> {
     const user = await this.userRepository.findById(dto.userId);
 
     if (!user) throw new NotFoundException('Usuário não encontrado');

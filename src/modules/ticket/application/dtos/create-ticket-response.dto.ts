@@ -1,6 +1,6 @@
 import { TicketStatus } from '../../domain/enums/ticket-status.enum';
 
-export interface CreateTicketResponseDTO {
+export interface TicketResponseDTO {
   ticket: {
     id: string;
     userId: string;
