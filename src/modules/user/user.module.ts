@@ -20,8 +20,8 @@ import { userUseCasesProviders } from './user.usecases.providers';
       provide: 'JwtTokenGenerator',
       useClass: JwtTokenGenerator,
     },
-
     ...userUseCasesProviders,
   ],
+  exports: ['UserRepository'],
 })
 export class UserModule {}

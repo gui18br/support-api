@@ -26,7 +26,7 @@ export class CreateUserUseCase {
       dto.name,
       dto.email,
       passwordHash,
-      dto.role ?? UserRole.Normal,
+      dto.role ?? UserRole.NORMAL,
     );
 
     await this.userRepository.create(user);
