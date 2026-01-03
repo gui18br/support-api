@@ -1,5 +1,5 @@
 import { TicketRepository } from '../../domain/repositories/ticket.repository';
-import { TicketResponseDTO } from '../dtos/create-ticket-response.dto';
+import { TicketResponseDTO } from '../dtos/ticket-response.dto';
 
 export class GetTicketUseCase {
   constructor(private readonly ticketRepository: TicketRepository) {}

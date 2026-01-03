@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CreateTicketUseCase } from '../../application/use-cases/create-ticket.usecase';
 import { CreateTicketDTO } from '../../application/dtos/create-ticket.dto';
-import { TicketResponseDTO } from '../../application/dtos/create-ticket-response.dto';
+import { TicketResponseDTO } from '../../application/dtos/ticket-response.dto';
 import { GetTicketUseCase } from '../../application/use-cases/get-ticket.usecase';
 
 @Controller('tickets')

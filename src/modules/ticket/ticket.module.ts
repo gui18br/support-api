@@ -14,5 +14,6 @@ import { UserModule } from '../user/user.module';
     },
     ...ticketUseCasesProviders,
   ],
+  exports: ['TicketRepository'],
 })
 export class TicketModule {}
