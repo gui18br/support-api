@@ -13,18 +13,18 @@ export class CreateFeedbackUseCase {
   ) {}
 
   async execute(dto: CreateFeedbackDTO): Promise<FeedbackResponseDTO> {
-    const ticket = await this.ticketRepository.getTicketById(dto.ticketId);
+    const ticket = await this.ticketRepository.findById(dto.ticketUuid);
 
     if (!ticket) throw new NotFoundException('Ticket não encontrado');
 
-    const feedback = new Feedback(randomUUID(), dto.ticketId, dto.content);
+    const feedback = new Feedback(randomUUID(), dto.ticketUuid, dto.content);
 
-    await this.feedbackRepository.create(feedback);
+    await this.feedbackRepository.save(feedback);
 
     return {
       feedback: {
-        id: feedback.id,
-        ticketId: feedback.ticketId,
+        uuid: feedback.uuid,
+        ticketUuid: feedback.ticketUuid,
         content: feedback.content,
       },
     };

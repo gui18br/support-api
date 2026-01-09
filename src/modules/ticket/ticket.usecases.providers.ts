@@ -10,12 +10,12 @@ export const ticketUseCasesProviders = [
       ticketRepository: TicketRepository,
       userRepository: UserRepository,
     ) => new CreateTicketUseCase(ticketRepository, userRepository),
-    inject: ['TicketRepository', 'UserRepository'],
+    inject: ['TypeOrmTicketRepository', 'TypeOrmUSerRepository'],
   },
   {
     provide: GetTicketUseCase,
     useFactory: (ticketRepository: TicketRepository) =>
       new GetTicketUseCase(ticketRepository),
-    inject: ['TicketRepository'],
+    inject: ['TypeOrmTicketRepository'],
   },
 ];

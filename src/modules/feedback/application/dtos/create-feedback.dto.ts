@@ -1,5 +1,5 @@
 export class CreateFeedbackDTO {
-  ticketId: string;
+  ticketUuid: string;
   content: string;
   createdAt: Date;
 }

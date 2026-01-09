@@ -1,16 +1,19 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './infrastructure/controllers/user.controller';
-import { InMemoryUserRepository } from './infrastructure/repositories/in-memory-user.repository';
 import { BcryptHasher } from './infrastructure/security/bcrypt-hasher';
 import { JwtTokenGenerator } from './infrastructure/cryptography/jwt-token-generator';
 import { userUseCasesProviders } from './user.usecases.providers';
+import { TypeOrmUSerRepository } from './infrastructure/database/repositories/typeorm-user.repository';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserEntity } from './infrastructure/database/entities/user.entity';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([UserEntity])],
   controllers: [UserController],
   providers: [
     {
-      provide: 'UserRepository',
-      useClass: InMemoryUserRepository,
+      provide: 'TypeOrmUSerRepository',
+      useClass: TypeOrmUSerRepository,
     },
     {
       provide: 'PasswordHasher',
@@ -22,6 +25,6 @@ import { userUseCasesProviders } from './user.usecases.providers';
     },
     ...userUseCasesProviders,
   ],
-  exports: ['UserRepository'],
+  exports: ['TypeOrmUSerRepository'],
 })
 export class UserModule {}

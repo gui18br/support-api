@@ -1,7 +1,7 @@
 export interface LoginUserResponseDTO {
   accessToken: string;
   user: {
-    id: string;
+    uuid: string;
     email: string;
     role: string;
   };

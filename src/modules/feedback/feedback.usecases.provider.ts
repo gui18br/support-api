@@ -9,6 +9,6 @@ export const feedbackUseCasesProviders = [
       feedbackRepository: FeedbackRepository,
       ticketRepository: TicketRepository,
     ) => new CreateFeedbackUseCase(feedbackRepository, ticketRepository),
-    inject: ['FeedbackRepository', 'TicketRepository'],
+    inject: ['TypeOrmFeedbackRepository', 'TypeOrmTicketRepository'],
   },
 ];

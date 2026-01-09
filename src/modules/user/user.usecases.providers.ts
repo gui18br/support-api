@@ -14,7 +14,7 @@ export const userUseCasesProviders = [
       jwtTokenGenerator: JwtTokenGenerator,
     ) =>
       new CreateUserUseCase(userRepository, passwordHasher, jwtTokenGenerator),
-    inject: ['UserRepository', 'PasswordHasher', 'JwtTokenGenerator'],
+    inject: ['TypeOrmUSerRepository', 'PasswordHasher', 'JwtTokenGenerator'],
   },
   {
     provide: LoginUserUseCase,
@@ -24,12 +24,12 @@ export const userUseCasesProviders = [
       jwtTokenGenerator: JwtTokenGenerator,
     ) =>
       new LoginUserUseCase(userRepository, passwordHasher, jwtTokenGenerator),
-    inject: ['UserRepository', 'PasswordHasher', 'JwtTokenGenerator'],
+    inject: ['TypeOrmUSerRepository', 'PasswordHasher', 'JwtTokenGenerator'],
   },
   {
     provide: UpdateUserUseCase,
     useFactory: (userRepository: UserRepository) =>
       new UpdateUserUseCase(userRepository),
-    inject: ['UserRepository'],
+    inject: ['TypeOrmUSerRepository'],
   },
 ];

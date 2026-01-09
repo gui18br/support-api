@@ -25,14 +25,14 @@ export class LoginUserUseCase {
       throw new UnauthorizedException('Email e/ou senha inválidos');
 
     const token = this.tokenGenerator.generate({
-      id: user.id,
+      uuid: user.uuid,
       email: user.email,
     });
 
     return {
       accessToken: token,
       user: {
-        id: user.id,
+        uuid: user.uuid,
         email: user.email,
         role: user.role,
       },

@@ -14,18 +14,18 @@ export class CreateTicketUseCase {
   ) {}
 
   async execute(dto: CreateTicketDTO): Promise<TicketResponseDTO> {
-    const user = await this.userRepository.findById(dto.userId);
+    const user = await this.userRepository.findById(dto.userUuid);
 
     if (!user) throw new NotFoundException('Usuário não encontrado');
 
-    const ticket = new Ticket(randomUUID(), dto.userId, dto.status);
+    const ticket = new Ticket(randomUUID(), dto.userUuid, dto.status);
 
-    await this.ticketRepository.create(ticket);
+    await this.ticketRepository.save(ticket);
 
     return {
       ticket: {
-        id: ticket.id,
-        userId: ticket.userId,
+        uuid: ticket.uuid,
+        userUuid: ticket.userUuid,
         status: ticket.status,
       },
     };

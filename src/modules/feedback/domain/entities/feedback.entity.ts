@@ -4,8 +4,8 @@ export class Feedback {
   public readonly createdAt: Date;
 
   constructor(
-    public readonly id: string,
-    public readonly ticketId: string,
+    public readonly uuid: string,
+    public readonly ticketUuid: string,
     public content: string,
   ) {
     this.createdAt = new Date();
@@ -13,8 +13,8 @@ export class Feedback {
   }
 
   private validate() {
-    if (!this.ticketId) {
-      throw new BadRequestException('Ticket id is required');
+    if (!this.ticketUuid) {
+      throw new BadRequestException('Ticket uuid is required');
     }
 
     if (!this.content) {

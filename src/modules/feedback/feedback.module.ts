@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
 import { FeedbackController } from './infrastructure/controllers/feedback.controller';
-import { InMemoryFeedbackRepository } from './infrastructure/repositories/in-memory-feedback.repository';
 import { feedbackUseCasesProviders } from './feedback.usecases.provider';
 import { TicketModule } from '../ticket/ticket.module';
+import { TypeOrmFeedbackRepository } from './infrastructure/database/repositories/typeorm-feedback.repository';
+import { FeedbackEntity } from './infrastructure/database/entities/feedback.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [TicketModule],
+  imports: [TypeOrmModule.forFeature([FeedbackEntity]), TicketModule],
   controllers: [FeedbackController],
   providers: [
     {
-      provide: 'FeedbackRepository',
-      useClass: InMemoryFeedbackRepository,
+      provide: 'TypeOrmFeedbackRepository',
+      useClass: TypeOrmFeedbackRepository,
     },
     ...feedbackUseCasesProviders,
   ],

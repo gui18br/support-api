@@ -29,17 +29,17 @@ export class CreateUserUseCase {
       dto.role ?? UserRole.NORMAL,
     );
 
-    await this.userRepository.create(user);
+    await this.userRepository.save(user);
 
     const token = this.tokenGenerator.generate({
-      id: user.id,
+      uuid: user.uuid,
       email: user.email,
     });
 
     return {
       accessToken: token,
       user: {
-        id: user.id,
+        uuid: user.uuid,
         email: user.email,
         role: user.role,
       },

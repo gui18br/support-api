@@ -27,11 +27,11 @@ export class UserController {
     return await this.loginUserUseCase.execute(body);
   }
 
-  @Put(':id')
+  @Put(':uuid')
   async update(
     @Body() body: UpdateUserDTO,
-    @Param('id') id: string,
+    @Param('uuid') uuid: string,
   ): Promise<UpdateUserResponseDTO> {
-    return await this.updateUserUseCase.execute(body, id);
+    return await this.updateUserUseCase.execute(body, uuid);
   }
 }

@@ -1,7 +1,7 @@
 export interface FeedbackResponseDTO {
   feedback: {
-    id: string;
-    ticketId: string;
+    uuid: string;
+    ticketUuid: string;
     content: string;
   };
 }

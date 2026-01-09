@@ -16,8 +16,8 @@ export class TicketController {
     return await this.createTicketUseCase.execute(body);
   }
 
-  @Get(':id')
-  async get(@Param('id') id: string): Promise<TicketResponseDTO> {
-    return await this.getTicketUseCase.execute(id);
+  @Get(':uuid')
+  async get(@Param('uuid') uuid: string): Promise<TicketResponseDTO> {
+    return await this.getTicketUseCase.execute(uuid);
   }
 }

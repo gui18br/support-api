@@ -1,6 +1,6 @@
 export interface UpdateUserResponseDTO {
   user: {
-    id: string;
+    uuid: string;
     email: string;
     role: string;
   };

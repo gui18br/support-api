@@ -9,9 +9,9 @@ export class UpdateUserUseCase {
 
   async execute(
     dto: UpdateUserDTO,
-    id: string,
+    uuid: string,
   ): Promise<UpdateUserResponseDTO> {
-    const user = await this.userRepository.findById(id);
+    const user = await this.userRepository.findById(uuid);
     if (!user) throw new UnauthorizedException('User dont exists');
 
     if (!Object.values(UserRole).includes(dto.role!)) {
@@ -22,13 +22,13 @@ export class UpdateUserUseCase {
     user.name = dto.name ?? user.name;
     user.role = dto.role ?? user.role;
 
-    const userUpdated = await this.userRepository.updateUser(user);
+    await this.userRepository.save(user);
 
     return {
       user: {
-        id: userUpdated.id,
-        email: userUpdated.email,
-        role: userUpdated.role,
+        uuid: user.uuid,
+        email: user.email,
+        role: user.role,
       },
     };
   }
