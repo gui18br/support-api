@@ -34,4 +34,8 @@ export class FeedbackMapper {
 
     return entity;
   }
+
+  static toDomainArray(entities: FeedbackEntity[]): Feedback[] {
+    return entities.map((entity) => this.toDomain(entity));
+  }
 }
