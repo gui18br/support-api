@@ -9,9 +9,10 @@ export class User {
     public email: string,
     public password: string,
     public role: UserRole,
+    createdAt?: Date,
   ) {
     this.validate();
-    this.createdAt = new Date();
+    this.createdAt = createdAt ?? new Date();
   }
 
   private validate() {
