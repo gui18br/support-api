@@ -15,7 +15,7 @@ export class FeedbackEntity {
   uuid: string;
 
   @ManyToOne(() => TicketEntity, { nullable: false })
-  @JoinColumn({ name: 'ticket_id' })
+  @JoinColumn({ name: 'ticket_uuid' })
   ticket: TicketEntity;
 
   @Column()

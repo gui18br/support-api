@@ -4,11 +4,21 @@ import { AnalyzeFeedbackSentimentsJob } from '../../application/jobs/analyze-fee
 
 @Injectable()
 export class AnalyzeFeedbackSentimentsScheduler {
+  private running = false;
+
   constructor(private readonly job: AnalyzeFeedbackSentimentsJob) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @Cron('*/5 * * * *')
   async handleCron(): Promise<void> {
-    await this.job.run();
+    console.log('🔥 Job AnalyzeFeedbackSentimentsJob iniciado');
+
+    if (this.running) return;
+
+    this.running = true;
+    try {
+      await this.job.run();
+    } finally {
+      this.running = false;
+    }
   }
 }

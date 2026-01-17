@@ -6,7 +6,7 @@ export class FeedbackMapper {
   static toDomain(entity: FeedbackEntity): Feedback {
     const feedback = new Feedback(
       entity.uuid,
-      entity.ticket?.uuid,
+      entity.ticket.uuid,
       entity.content,
       entity.createdAt,
     );

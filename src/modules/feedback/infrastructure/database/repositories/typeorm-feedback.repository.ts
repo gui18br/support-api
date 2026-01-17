@@ -16,6 +16,9 @@ export class TypeOrmFeedbackRepository implements FeedbackRepository {
   async findNotAnalyzed(): Promise<Feedback[]> {
     const entities = await this.ormRepo.find({
       where: { sentiment_analyzed_at: IsNull() },
+      relations: {
+        ticket: true,
+      },
     });
 
     return FeedbackMapper.toDomainArray(entities);
