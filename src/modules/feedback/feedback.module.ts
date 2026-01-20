@@ -19,12 +19,12 @@ import { AnalyzeFeedbackSentimentsScheduler } from './infrastructure/schedulers/
   controllers: [FeedbackController, AnalyzeFeedbackSentimentController],
   providers: [
     {
-      provide: 'TypeOrmFeedbackRepository',
+      provide: 'FeedbackRepository',
       useClass: TypeOrmFeedbackRepository,
     },
     AnalyzeFeedbackSentimentsScheduler,
     ...feedbackUseCasesProviders,
   ],
-  exports: [],
+  exports: ['FeedbackRepository'],
 })
 export class FeedbackModule {}

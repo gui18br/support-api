@@ -3,7 +3,7 @@ import { FeedbackRepository } from 'src/modules/feedback/domain/repositories/fee
 import { FeedbackMapper } from '../mapper/feedback.mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FeedbackEntity } from '../entities/feedback.entity';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -12,6 +12,17 @@ export class TypeOrmFeedbackRepository implements FeedbackRepository {
     @InjectRepository(FeedbackEntity)
     private readonly ormRepo: Repository<FeedbackEntity>,
   ) {}
+
+  async findAnalyzed(): Promise<Feedback[]> {
+    const entities = await this.ormRepo.find({
+      where: { sentiment_analyzed_at: Not(IsNull()) },
+      relations: {
+        ticket: true,
+      },
+    });
+
+    return FeedbackMapper.toDomainArray(entities);
+  }
 
   async findNotAnalyzed(): Promise<Feedback[]> {
     const entities = await this.ormRepo.find({

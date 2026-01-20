@@ -11,7 +11,7 @@ export const feedbackUseCasesProviders = [
       feedbackRepository: FeedbackRepository,
       ticketRepository: TicketRepository,
     ) => new CreateFeedbackUseCase(feedbackRepository, ticketRepository),
-    inject: ['TypeOrmFeedbackRepository', 'TypeOrmTicketRepository'],
+    inject: ['FeedbackRepository', 'TypeOrmTicketRepository'],
   },
   {
     provide: AnalyzeFeedbackSentimentsJob,
@@ -19,6 +19,6 @@ export const feedbackUseCasesProviders = [
       feedbackRepository: FeedbackRepository,
       analyzeSentiment: AnalyzeSentimentUseCase,
     ) => new AnalyzeFeedbackSentimentsJob(feedbackRepository, analyzeSentiment),
-    inject: ['TypeOrmFeedbackRepository', AnalyzeSentimentUseCase],
+    inject: ['FeedbackRepository', AnalyzeSentimentUseCase],
   },
 ];
