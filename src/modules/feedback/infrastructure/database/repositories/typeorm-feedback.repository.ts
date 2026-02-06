@@ -24,12 +24,17 @@ export class TypeOrmFeedbackRepository implements FeedbackRepository {
     return FeedbackMapper.toDomainArray(entities);
   }
 
-  async findNotAnalyzed(): Promise<Feedback[]> {
+  async findNotAnalyzedPaginated(
+    limit: number,
+    offset: number,
+  ): Promise<Feedback[]> {
     const entities = await this.ormRepo.find({
       where: { sentiment_analyzed_at: IsNull() },
       relations: {
         ticket: true,
       },
+      take: limit,
+      skip: offset,
     });
 
     return FeedbackMapper.toDomainArray(entities);
