@@ -10,7 +10,10 @@ export class AnalyzeSentimentUseCase {
   ) {}
 
   execute(sentiment: Sentiment): SentimentResult {
-    const start = Date.now();
+    const startTime = Date.now();
+
+    const cpuBefore = process.cpuUsage();
+    const memBefore = process.memoryUsage();
 
     try {
       const result = this.analyzer.analyze(sentiment);
@@ -22,7 +25,19 @@ export class AnalyzeSentimentUseCase {
       this.metrics.incrementError();
       throw error;
     } finally {
-      this.metrics.observeProcessingTime(Date.now() - start);
+      const duration = Date.now() - startTime;
+      this.metrics.observeProcessingTime(duration);
+
+      const cpuAfter = process.cpuUsage(cpuBefore);
+      const cpuMs = (cpuAfter.user + cpuAfter.system) / 1000;
+
+      this.metrics.observeProcessingTime(cpuMs / 1000);
+
+      const memAfter = process.memoryUsage();
+
+      this.metrics.observeHeapUsage(memAfter.heapUsed - memBefore.heapUsed);
+
+      this.metrics.observeRssUsage(memAfter.rss - memBefore.rss);
     }
   }
 }
