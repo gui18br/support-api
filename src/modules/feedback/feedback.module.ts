@@ -8,7 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnalyzeFeedbackSentimentController } from './infrastructure/controllers/analyze-feedback-sentiments.controller';
 
 import { SentimentModule } from '../sentiment/sentiment.module';
-import { AnalyzeFeedbackSentimentsScheduler } from './infrastructure/schedulers/analyze-feedback-sentiment.scheduler';
+// import { AnalyzeFeedbackSentimentsScheduler } from './infrastructure/schedulers/analyze-feedback-sentiment.scheduler';
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { AnalyzeFeedbackSentimentsScheduler } from './infrastructure/schedulers/
       provide: 'FeedbackRepository',
       useClass: TypeOrmFeedbackRepository,
     },
-    AnalyzeFeedbackSentimentsScheduler,
+    // AnalyzeFeedbackSentimentsScheduler,
     ...feedbackUseCasesProviders,
   ],
   exports: ['FeedbackRepository'],

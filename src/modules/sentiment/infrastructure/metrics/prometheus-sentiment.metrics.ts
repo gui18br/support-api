@@ -55,4 +55,10 @@ export class PrometheusSentimentMetrics implements SentimentMetricsPort {
 
     this.rssUsage.observe(value);
   }
+
+  observeCpuUsage(seconds: number): void {
+    const value = Math.max(seconds, 0);
+
+    this.cpuUsage.observe(value);
+  }
 }

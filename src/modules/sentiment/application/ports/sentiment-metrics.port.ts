@@ -6,4 +6,5 @@ export interface SentimentMetricsPort {
   observeProcessingTime(durationMs: number): void;
   observeHeapUsage(bytes: number): void;
   observeRssUsage(bytes: number): void;
+  observeCpuUsage(seconds: number): void;
 }

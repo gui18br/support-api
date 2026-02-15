@@ -29,9 +29,9 @@ export class AnalyzeSentimentUseCase {
       this.metrics.observeProcessingTime(duration);
 
       const cpuAfter = process.cpuUsage(cpuBefore);
-      const cpuMs = (cpuAfter.user + cpuAfter.system) / 1000;
+      const cpuSeconds = (cpuAfter.user + cpuAfter.system) / 1_000_000;
 
-      this.metrics.observeProcessingTime(cpuMs / 1000);
+      this.metrics.observeCpuUsage(cpuSeconds);
 
       const memAfter = process.memoryUsage();
 
