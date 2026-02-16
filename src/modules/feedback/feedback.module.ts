@@ -5,7 +5,6 @@ import { TicketModule } from '../ticket/ticket.module';
 import { TypeOrmFeedbackRepository } from './infrastructure/database/repositories/typeorm-feedback.repository';
 import { FeedbackEntity } from './infrastructure/database/entities/feedback.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AnalyzeFeedbackSentimentController } from './infrastructure/controllers/analyze-feedback-sentiments.controller';
 
 import { SentimentModule } from '../sentiment/sentiment.module';
 // import { AnalyzeFeedbackSentimentsScheduler } from './infrastructure/schedulers/analyze-feedback-sentiment.scheduler';
@@ -16,7 +15,7 @@ import { SentimentModule } from '../sentiment/sentiment.module';
     TicketModule,
     SentimentModule,
   ],
-  controllers: [FeedbackController, AnalyzeFeedbackSentimentController],
+  controllers: [FeedbackController],
   providers: [
     {
       provide: 'FeedbackRepository',

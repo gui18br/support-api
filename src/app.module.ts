@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MetricsModule } from './shared/metrics/metrics.module';
+import { ProcessingModule } from './modules/processing/processing.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MetricsModule } from './shared/metrics/metrics.module';
     SentimentModule,
     SystemHealthModule,
     MetricsModule,
+    ProcessingModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,

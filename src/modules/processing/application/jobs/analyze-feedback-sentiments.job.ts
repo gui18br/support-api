@@ -1,12 +1,15 @@
 import pLimit from 'p-limit';
+import { Job } from '../../domain/contracts/job.interface';
 import { FeedbackRepository } from 'src/modules/feedback/domain/repositories/feedback.repository';
 import { AnalyzeSentimentUseCase } from 'src/modules/sentiment/application/use-cases/analyse-sentiment.usecase';
 import { Sentiment } from 'src/modules/sentiment/domain/entities/sentiment.entity';
 
-const BATCH_SIZE = 100;
-const CONCURRENCY = 20;
+export class AnalyzeFeedbackSentimentsJob implements Job {
+  name = 'analyze-feedback-sentiments';
 
-export class AnalyzeFeedbackSentimentsJob {
+  private readonly BATCH_SIZE = 100;
+  private readonly CONCURRENCY = 20;
+
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
     private readonly analyzeSentiment: AnalyzeSentimentUseCase,
@@ -17,24 +20,25 @@ export class AnalyzeFeedbackSentimentsJob {
 
     while (true) {
       const feedbacks = await this.feedbackRepository.findNotAnalyzedPaginated(
-        BATCH_SIZE,
-        page * BATCH_SIZE,
+        this.BATCH_SIZE,
+        page * this.BATCH_SIZE,
       );
 
       if (!feedbacks.length) break;
 
-      const limit = pLimit(CONCURRENCY);
+      const limit = pLimit(this.CONCURRENCY);
 
       await Promise.all(
-        feedbacks.map((feedbacks) =>
+        feedbacks.map((feedback) =>
           limit(async () => {
             try {
-              const sentiment = new Sentiment(feedbacks.content);
+              const sentiment = new Sentiment(feedback.content);
+
               const result = this.analyzeSentiment.execute(sentiment);
 
-              feedbacks.analyzeSentiment(result.score, result.label);
+              feedback.analyzeSentiment(result.score, result.label);
 
-              await this.feedbackRepository.save(feedbacks);
+              await this.feedbackRepository.save(feedback);
             } catch (error) {
               console.error(error);
             }
