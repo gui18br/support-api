@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { SentimentLabel } from 'src/modules/sentiment/domain/enums/sentiment-label.enum';
+import { SentimentLabel } from 'src/modules/processing/domain/enums/sentiment-label.enum';
 
 export class Feedback {
   public readonly createdAt: Date;
