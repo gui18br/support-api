@@ -1,4 +1,10 @@
+enum SentimentLabel {
+  POSITIVE = 'POSITIVE',
+  NEUTRAL = 'NEUTRAL',
+  NEGATIVE = 'NEGATIVE',
+}
+
 export interface SentimentResponseDTO {
-  label: string;
+  label: SentimentLabel;
   score: number;
 }

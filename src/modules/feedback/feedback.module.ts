@@ -6,15 +6,8 @@ import { TypeOrmFeedbackRepository } from './infrastructure/database/repositorie
 import { FeedbackEntity } from './infrastructure/database/entities/feedback.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { SentimentModule } from '../sentiment/sentiment.module';
-// import { AnalyzeFeedbackSentimentsScheduler } from './infrastructure/schedulers/analyze-feedback-sentiment.scheduler';
-
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([FeedbackEntity]),
-    TicketModule,
-    SentimentModule,
-  ],
+  imports: [TypeOrmModule.forFeature([FeedbackEntity]), TicketModule],
   controllers: [FeedbackController],
   providers: [
     {

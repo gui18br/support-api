@@ -1,7 +1,7 @@
 import type { FeedbackRepository } from 'src/modules/feedback/domain/repositories/feedback.repository';
 
 import { HealthMetrics } from '../domain/value-objects/health-metrics';
-import { SentimentLabel } from 'src/modules/sentiment/domain/enums/sentiment-label.enum';
+import { SentimentLabel } from 'src/modules/processing/domain/enums/sentiment-label.enum';
 import { HealthMetricsReader } from '../domain/repositories/health-metrics.repository';
 import { Inject } from '@nestjs/common';
 

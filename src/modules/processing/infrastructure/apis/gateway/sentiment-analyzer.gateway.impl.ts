@@ -2,7 +2,9 @@ import { SentimentAnalyzerGateway } from 'src/modules/processing/application/gat
 import { Sentiment } from 'src/modules/processing/domain/entities/sentiment.entity';
 import { SentimentAnalyzer } from '../sentiment.analyzer';
 import { SentimentMapper } from '../mappers/sentiment.mapper';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class SentimentAnalyzerGatewayImpl implements SentimentAnalyzerGateway {
   constructor(private analyzer: SentimentAnalyzer) {}
 

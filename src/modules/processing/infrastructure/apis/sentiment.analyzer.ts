@@ -1,13 +1,15 @@
 import axios, { AxiosInstance } from 'axios';
 import { SentimentRequestDTO } from './dtos/sentiment-request.dto';
 import { SentimentResponseDTO } from './dtos/sentiment-response.dto';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class SentimentAnalyzer {
   private http: AxiosInstance;
 
   constructor() {
     this.http = axios.create({
-      baseURL: 'https://sentiment-ms:8001',
+      baseURL: 'http://sentiment-ms:8001',
       headers: { 'Content-Type': 'application/json' },
     });
   }
