@@ -1,4 +1,4 @@
-import { SentimentLabel } from 'src/modules/sentiment/domain/enums/sentiment-label.enum';
+import { SentimentLabel } from 'src/modules/processing/domain/enums/sentiment-label.enum';
 import { TicketEntity } from 'src/modules/ticket/infrastructure/database/entities/ticket.entity';
 import {
   Column,

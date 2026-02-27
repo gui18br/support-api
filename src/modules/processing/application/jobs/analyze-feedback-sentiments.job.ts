@@ -1,8 +1,7 @@
 import pLimit from 'p-limit';
 import { Job } from '../../domain/contracts/job.interface';
 import { FeedbackRepository } from 'src/modules/feedback/domain/repositories/feedback.repository';
-import { AnalyzeSentimentUseCase } from 'src/modules/sentiment/application/use-cases/analyse-sentiment.usecase';
-import { Sentiment } from 'src/modules/sentiment/domain/entities/sentiment.entity';
+import { SentimentAnalyzerGateway } from '../gateways/sentiment-analyzer.gateway';
 
 export class AnalyzeFeedbackSentimentsJob implements Job {
   name = 'analyze-feedback-sentiments';
@@ -12,7 +11,7 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
 
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
-    private readonly analyzeSentiment: AnalyzeSentimentUseCase,
+    private readonly sentimentAnalyzerGateway: SentimentAnalyzerGateway,
   ) {}
 
   async run(): Promise<void> {
@@ -32,9 +31,10 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
         feedbacks.map((feedback) =>
           limit(async () => {
             try {
-              const sentiment = new Sentiment(feedback.content);
-
-              const result = this.analyzeSentiment.execute(sentiment);
+              const result =
+                await this.sentimentAnalyzerGateway.analizarSentimento(
+                  feedback.content,
+                );
 
               feedback.analyzeSentiment(result.score, result.label);
 
