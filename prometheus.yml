@@ -3,6 +3,9 @@ global:
 
 scrape_configs:
   - job_name: 'support-api'
-    metrics_path: /metrics
     static_configs:
       - targets: ['support-api:3000']
+
+  - job_name: 'sentiment-ms'
+    static_configs:
+      - targets: ['sentiment-ms:8001']
