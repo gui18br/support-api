@@ -15,12 +15,10 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
   ) {}
 
   async run(): Promise<void> {
-    let page = 0;
-
     while (true) {
       const feedbacks = await this.feedbackRepository.findNotAnalyzedPaginated(
         this.BATCH_SIZE,
-        page * this.BATCH_SIZE,
+        0,
       );
 
       if (!feedbacks.length) break;
@@ -45,8 +43,6 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
           }),
         ),
       );
-
-      page++;
     }
   }
 }
