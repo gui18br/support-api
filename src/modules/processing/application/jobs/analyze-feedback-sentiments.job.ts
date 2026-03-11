@@ -7,8 +7,8 @@ import { Sentiment } from 'src/modules/sentiment/domain/entities/sentiment.entit
 export class AnalyzeFeedbackSentimentsJob implements Job {
   name = 'analyze-feedback-sentiments';
 
-  private readonly BATCH_SIZE = 100;
-  private readonly CONCURRENCY = 20;
+  private readonly BATCH_SIZE = 1000;
+  private readonly CONCURRENCY = 240;
 
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
@@ -19,13 +19,11 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
     while (true) {
       const feedbacks = await this.feedbackRepository.findNotAnalyzedPaginated(
         this.BATCH_SIZE,
-        0,
       );
 
       if (!feedbacks.length) break;
 
       const limit = pLimit(this.CONCURRENCY);
-
       await Promise.all(
         feedbacks.map((feedback) =>
           limit(async () => {

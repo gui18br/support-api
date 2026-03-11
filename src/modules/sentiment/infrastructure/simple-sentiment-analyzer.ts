@@ -8,19 +8,13 @@ type LexiconEntry = {
   terms: string[];
 };
 
-export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
-  // ==============================
-  // Configurações ajustáveis
-  // ==============================
-
-  private NEGATION_WINDOW = 3;
+export class AdvancedSentimentAnalyzer implements SentimentAnalyzer {
+  private NEGATION_WINDOW = 4;
   private POSITION_WEIGHT_FACTOR = 0.15;
-  private INTENSIFIER_MULTIPLIER = 1.8;
-  private DIMINISHER_MULTIPLIER = 0.6;
-  private EMBEDDING_DIMENSION = 256;
+  private VECTOR_DIM = 1536;
 
   // ==============================
-  // Stopwords
+  // STOPWORDS
   // ==============================
 
   private stopwords = new Set([
@@ -43,40 +37,100 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
     'isto',
     'no',
     'na',
+    'nos',
+    'nas',
+    'por',
+    'como',
+    'mais',
+    'menos',
   ]);
 
   // ==============================
-  // Negação & Intensidade
+  // MODIFIERS
   // ==============================
 
-  private negations = ['não', 'nunca', 'jamais', 'nem'];
-  private intensifiers = ['muito', 'extremamente', 'super', 'absurdamente'];
-  private diminishers = ['pouco', 'levemente', 'meio'];
+  private negations = ['nao', 'nunca', 'jamais', 'nem'];
+
+  private intensifiers = [
+    'muito',
+    'extremamente',
+    'super',
+    'absurdamente',
+    'bastante',
+  ];
+
+  private diminishers = ['pouco', 'levemente', 'meio', 'relativamente'];
+
+  private failureVerbs = [
+    'quebrou',
+    'travou',
+    'bugou',
+    'caiu',
+    'parou',
+    'falhou',
+    'congelou',
+  ];
 
   // ==============================
-  // Failure verbs
-  // ==============================
-
-  private failureVerbs = ['quebrou', 'travou', 'bugou', 'caiu', 'parou'];
-
-  // ==============================
-  // Lexicons
+  // LEXICONS
   // ==============================
 
   private negativeLexicon: LexiconEntry[] = [
-    { weight: -3, terms: ['péssimo', 'horrível', 'inaceitável'] },
-    { weight: -2, terms: ['ruim', 'bugado', 'erro', 'travando'] },
-    { weight: -1, terms: ['lento', 'confuso', 'estranho'] },
+    { weight: -3, terms: ['pessimo', 'horrivel', 'inaceitavel', 'frustrante'] },
+
+    {
+      weight: -2,
+      terms: [
+        'ruim',
+        'erro',
+        'falha',
+        'falhas',
+        'problema',
+        'problemas',
+        'bug',
+        'bugs',
+        'travamento',
+        'travamentos',
+        'instabilidade',
+        'degradacao',
+        'lentidao',
+        'perda',
+        'inconsistencia',
+      ],
+    },
+
+    {
+      weight: -1,
+      terms: ['lento', 'confuso', 'demorado', 'complexo', 'limitante'],
+    },
   ];
 
   private positiveLexicon: LexiconEntry[] = [
-    { weight: 3, terms: ['excelente', 'perfeito', 'impecável'] },
-    { weight: 2, terms: ['bom', 'funciona', 'ótimo'] },
-    { weight: 1, terms: ['aceitável', 'ok', 'normal'] },
+    { weight: 3, terms: ['excelente', 'perfeito', 'impecavel'] },
+
+    { weight: 2, terms: ['bom', 'funciona', 'otimo', 'rapido'] },
+
+    { weight: 1, terms: ['aceitavel', 'ok', 'normal', 'estavel'] },
   ];
 
   // ==============================
-  // PIPELINE NLP
+  // COMPLAINT EXPRESSIONS
+  // ==============================
+
+  private complaintExpressions = [
+    'oportunidade de melhoria',
+    'ainda existem',
+    'continua apresentando',
+    'ainda apresenta',
+    'nao esta otimizado',
+    'tempo de resposta alto',
+    'mensagem de erro',
+    'perda de informacao',
+    'ficar sem resposta',
+  ];
+
+  // ==============================
+  // MAIN
   // ==============================
 
   analyze(sentiment: Sentiment): SentimentResult {
@@ -91,18 +145,34 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
     let score = 0;
 
     score += this.lexiconScore(stemmed);
-    score += this.failureVerbScore(stemmed);
     score += this.negationScore(stemmed);
     score += this.intensityScore(stemmed);
-    score += this.frequencyScore(stemmed);
+    score += this.failureVerbScore(stemmed);
+    score += this.tfidfScore(stemmed);
     score += this.ngramScore(ngrams);
-    score += this.embeddingSimilarityScore(stemmed);
+    score += this.syntacticScore(stemmed);
+    score += this.semanticDistanceScore(stemmed);
+    score += this.embeddingScore(stemmed);
 
-    const normalizedScore = score / Math.max(stemmed.length, 1);
+    const graph = this.buildCoOccurrenceGraph(stemmed);
+
+    score += this.sentimentPropagation(graph);
+
+    const ranks = this.pageRank(graph);
+
+    score += this.graphRankSentiment(ranks);
+
+    score += this.globalSemanticSimilarity(stemmed);
+
+    score += this.complaintScore(normalized);
+
+    // CORREÇÃO IMPORTANTE
+    const normalizedScore = score / Math.sqrt(stemmed.length + 1);
 
     let label = SentimentLabel.NEUTRAL;
-    if (normalizedScore > 0.05) label = SentimentLabel.POSITIVE;
-    if (normalizedScore < -0.05) label = SentimentLabel.NEGATIVE;
+
+    if (normalizedScore > 0.2) label = SentimentLabel.POSITIVE;
+    if (normalizedScore < -0.2) label = SentimentLabel.NEGATIVE;
 
     return {
       score: Number(normalizedScore.toFixed(3)),
@@ -111,39 +181,26 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
   }
 
   // ==============================
-  // 1. Normalização pesada
+  // NORMALIZATION
   // ==============================
 
   private normalizeText(text: string): string {
     return text
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // remove acentos
-      .replace(/[^\w\s]/g, ' ') // remove pontuação
-      .replace(/[\u{1F600}-\u{1F64F}]/gu, ' emoji ') // emojis
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
-
-  // ==============================
-  // 2. Tokenização
-  // ==============================
 
   private tokenize(text: string): string[] {
     return text.split(' ');
   }
 
-  // ==============================
-  // 3. Stopwords
-  // ==============================
-
   private removeStopwords(tokens: string[]): string[] {
     return tokens.filter((t) => !this.stopwords.has(t));
   }
-
-  // ==============================
-  // 4. Stemming simples
-  // ==============================
 
   private stemTokens(tokens: string[]): string[] {
     return tokens.map((token) =>
@@ -155,26 +212,71 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
   }
 
   // ==============================
-  // 5. N-grams
+  // NGRAMS
   // ==============================
 
   private generateNGrams(tokens: string[]): string[] {
     const ngrams: string[] = [];
 
     for (let i = 0; i < tokens.length; i++) {
-      if (tokens[i + 1]) {
-        ngrams.push(tokens[i] + ' ' + tokens[i + 1]);
-      }
-      if (tokens[i + 2]) {
+      if (tokens[i + 1]) ngrams.push(tokens[i] + ' ' + tokens[i + 1]);
+
+      if (tokens[i + 2])
         ngrams.push(tokens[i] + ' ' + tokens[i + 1] + ' ' + tokens[i + 2]);
-      }
     }
 
     return ngrams;
   }
 
+  private ngramScore(ngrams: string[]): number {
+    let score = 0;
+
+    ngrams.forEach((g) => {
+      if (g.includes('nao bom')) score -= 2;
+      if (g.includes('muito bom')) score += 2;
+      if (g.includes('nao funciona')) score -= 3;
+
+      if (g.includes('tempo resposta alto')) score -= 2;
+      if (g.includes('mensagem erro')) score -= 2;
+      if (g.includes('perda informacao')) score -= 3;
+    });
+
+    return score;
+  }
+
   // ==============================
-  // 6. Lexicon + peso posicional
+  // POS TAGGING SIMPLE
+  // ==============================
+
+  private posTag(token: string): string {
+    if (token.endsWith('mente')) return 'ADV';
+
+    if (token.endsWith('ar') || token.endsWith('er') || token.endsWith('ir'))
+      return 'VERB';
+
+    if (this.isPositive(token) || this.isNegative(token)) return 'ADJ';
+
+    return 'NOUN';
+  }
+
+  private syntacticScore(tokens: string[]): number {
+    let score = 0;
+
+    tokens.forEach((token) => {
+      const tag = this.posTag(token);
+
+      if (tag === 'ADJ') {
+        if (this.isPositive(token)) score += 1.2;
+
+        if (this.isNegative(token)) score -= 1.2;
+      }
+    });
+
+    return score;
+  }
+
+  // ==============================
+  // LEXICON SCORE
   // ==============================
 
   private lexiconScore(tokens: string[]): number {
@@ -185,15 +287,11 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
         1 + (tokens.length - index) * this.POSITION_WEIGHT_FACTOR;
 
       this.positiveLexicon.forEach((entry) => {
-        if (entry.terms.includes(token)) {
-          score += entry.weight * positionWeight;
-        }
+        if (entry.terms.includes(token)) score += entry.weight * positionWeight;
       });
 
       this.negativeLexicon.forEach((entry) => {
-        if (entry.terms.includes(token)) {
-          score += entry.weight * positionWeight;
-        }
+        if (entry.terms.includes(token)) score += entry.weight * positionWeight;
       });
     });
 
@@ -201,23 +299,21 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
   }
 
   // ==============================
-  // 7. Failure verbs
+  // FAILURE VERBS
   // ==============================
 
   private failureVerbScore(tokens: string[]): number {
     let score = 0;
 
     tokens.forEach((t) => {
-      if (this.failureVerbs.includes(t)) {
-        score -= 2.5;
-      }
+      if (this.failureVerbs.includes(t)) score -= 2.5;
     });
 
     return score;
   }
 
   // ==============================
-  // 8. Negação contextual
+  // NEGATION
   // ==============================
 
   private negationScore(tokens: string[]): number {
@@ -239,7 +335,7 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
   }
 
   // ==============================
-  // 9. Intensidade
+  // INTENSITY
   // ==============================
 
   private intensityScore(tokens: string[]): number {
@@ -250,13 +346,13 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
       if (!next) return;
 
       if (this.intensifiers.includes(token)) {
-        if (this.isPositive(next)) score += this.INTENSIFIER_MULTIPLIER;
-        if (this.isNegative(next)) score -= this.INTENSIFIER_MULTIPLIER;
+        if (this.isPositive(next)) score += 1.8;
+        if (this.isNegative(next)) score -= 1.8;
       }
 
       if (this.diminishers.includes(token)) {
-        if (this.isPositive(next)) score += this.DIMINISHER_MULTIPLIER;
-        if (this.isNegative(next)) score -= this.DIMINISHER_MULTIPLIER;
+        if (this.isPositive(next)) score += 0.6;
+        if (this.isNegative(next)) score -= 0.6;
       }
     });
 
@@ -264,10 +360,10 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
   }
 
   // ==============================
-  // 10. Frequência de termos
+  // TFIDF
   // ==============================
 
-  private frequencyScore(tokens: string[]): number {
+  private tfidfScore(tokens: string[]): number {
     const freq: Record<string, number> = {};
 
     tokens.forEach((t) => {
@@ -277,54 +373,143 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
     let score = 0;
 
     Object.entries(freq).forEach(([term, count]) => {
-      if (this.isPositive(term)) score += count * 0.5;
-      if (this.isNegative(term)) score -= count * 0.5;
+      const tf = count / tokens.length;
+      const idf = Math.log(10000 / (1 + count));
+
+      const weight = tf * idf;
+
+      if (this.isPositive(term)) score += weight;
+      if (this.isNegative(term)) score -= weight;
     });
 
     return score;
   }
 
   // ==============================
-  // 11. N-gram score
+  // GRAPH
   // ==============================
 
-  private ngramScore(ngrams: string[]): number {
-    let score = 0;
+  private buildCoOccurrenceGraph(tokens: string[]) {
+    const graph = new Map<string, Map<string, number>>();
 
-    ngrams.forEach((g) => {
-      if (g.includes('nao bom')) score -= 2;
-      if (g.includes('muito bom')) score += 2;
-      if (g.includes('nao funciona')) score -= 3;
-    });
+    for (let i = 0; i < tokens.length; i++) {
+      for (let j = i + 1; j < tokens.length; j++) {
+        const a = tokens[i];
+        const b = tokens[j];
 
-    return score;
-  }
+        if (!graph.has(a)) graph.set(a, new Map());
+        if (!graph.has(b)) graph.set(b, new Map());
 
-  // ==============================
-  // 12. Embedding simulado
-  // ==============================
+        const edges = graph.get(a)!;
 
-  private embeddingSimilarityScore(tokens: string[]): number {
-    const textVector = this.fakeEmbedding(tokens.join(' '));
-
-    const positiveAnchor = this.fakeEmbedding('excelente perfeito otimo');
-    const negativeAnchor = this.fakeEmbedding('ruim pessimo horrivel');
-
-    const posSim = this.cosineSimilarity(textVector, positiveAnchor);
-    const negSim = this.cosineSimilarity(textVector, negativeAnchor);
-
-    return (posSim - negSim) * 5;
-  }
-
-  private fakeEmbedding(text: string): number[] {
-    const vector = new Array(this.EMBEDDING_DIMENSION).fill(0);
-
-    for (let i = 0; i < text.length; i++) {
-      vector[i % this.EMBEDDING_DIMENSION] += text.charCodeAt(i);
+        edges.set(b, (edges.get(b) || 0) + 1);
+      }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return vector;
+    return graph;
+  }
+
+  private pageRank(graph: Map<string, Map<string, number>>, iterations = 30) {
+    const ranks = new Map<string, number>();
+
+    graph.forEach((_, node) => ranks.set(node, 1));
+
+    for (let i = 0; i < iterations; i++) {
+      const newRanks = new Map<string, number>();
+
+      graph.forEach((edges, node) => {
+        let sum = 0;
+
+        edges.forEach((_, neighbor) => {
+          sum += (ranks.get(neighbor) || 1) / edges.size;
+        });
+
+        newRanks.set(node, 0.15 + 0.85 * sum);
+      });
+
+      newRanks.forEach((v, k) => ranks.set(k, v));
+    }
+
+    return ranks;
+  }
+
+  private graphRankSentiment(ranks: Map<string, number>) {
+    let score = 0;
+
+    ranks.forEach((rank, token) => {
+      if (this.isPositive(token)) score += rank;
+      if (this.isNegative(token)) score -= rank;
+    });
+
+    return score;
+  }
+
+  private sentimentPropagation(graph: Map<string, Map<string, number>>) {
+    let score = 0;
+
+    graph.forEach((edges, node) => {
+      edges.forEach((_, neighbor) => {
+        if (this.isPositive(node) && this.isPositive(neighbor)) score += 0.5;
+
+        if (this.isNegative(node) && this.isNegative(neighbor)) score -= 0.5;
+      });
+    });
+
+    return score;
+  }
+
+  // ==============================
+  // SEMANTIC
+  // ==============================
+
+  private globalSemanticSimilarity(tokens: string[]): number {
+    let score = 0;
+
+    const vectors = tokens.map((t) => this.tokenVector(t));
+
+    for (let i = 0; i < vectors.length; i++) {
+      for (let j = i + 1; j < vectors.length; j++) {
+        score += this.cosineSimilarity(vectors[i], vectors[j]);
+      }
+    }
+
+    return score / (tokens.length || 1);
+  }
+
+  private tokenVector(token: string): number[] {
+    const vec = new Array(this.VECTOR_DIM).fill(0);
+
+    for (let i = 0; i < token.length; i++) {
+      const idx = (token.charCodeAt(i) * 31) % this.VECTOR_DIM;
+
+      vec[idx] += 1;
+    }
+
+    return vec;
+  }
+
+  private sentenceVector(tokens: string[]): number[] {
+    const vec = new Array(this.VECTOR_DIM).fill(0);
+
+    tokens.forEach((token) => {
+      const tv = this.tokenVector(token);
+
+      for (let i = 0; i < this.VECTOR_DIM; i++) vec[i] += tv[i];
+    });
+
+    return vec;
+  }
+
+  private embeddingScore(tokens: string[]): number {
+    const textVec = this.sentenceVector(tokens);
+
+    const posVec = this.sentenceVector(['excelente', 'perfeito', 'otimo']);
+    const negVec = this.sentenceVector(['ruim', 'pessimo', 'horrivel']);
+
+    const posSim = this.cosineSimilarity(textVec, posVec);
+    const negSim = this.cosineSimilarity(textVec, negVec);
+
+    return (posSim - negSim) * 2;
   }
 
   private cosineSimilarity(a: number[], b: number[]): number {
@@ -334,15 +519,76 @@ export class SimpleSentimentAnalyzer implements SentimentAnalyzer {
 
     for (let i = 0; i < a.length; i++) {
       dot += a[i] * b[i];
-      normA += a[i] ** 2;
-      normB += b[i] ** 2;
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
     }
 
     return dot / (Math.sqrt(normA) * Math.sqrt(normB) || 1);
   }
 
   // ==============================
-  // Helpers
+  // SEMANTIC DISTANCE
+  // ==============================
+
+  private semanticDistanceScore(tokens: string[]): number {
+    let score = 0;
+
+    for (let i = 0; i < tokens.length; i++) {
+      for (let j = i + 1; j < tokens.length; j++) {
+        const dist = this.levenshtein(tokens[i], tokens[j]);
+
+        if (dist <= 2) {
+          if (this.isPositive(tokens[i])) score += 0.2;
+          if (this.isNegative(tokens[i])) score -= 0.2;
+        }
+      }
+    }
+
+    return score;
+  }
+
+  // ==============================
+  // COMPLAINT DETECTOR
+  // ==============================
+
+  private complaintScore(text: string) {
+    let score = 0;
+
+    this.complaintExpressions.forEach((expr) => {
+      if (text.includes(expr)) score -= 2;
+    });
+
+    return score;
+  }
+
+  // ==============================
+  // LEVENSHTEIN
+  // ==============================
+
+  private levenshtein(a: string, b: string) {
+    const matrix: number[][] = Array.from({ length: b.length + 1 }, () => []);
+
+    for (let i = 0; i <= b.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) == a.charAt(j - 1))
+          matrix[i][j] = matrix[i - 1][j - 1];
+        else
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1,
+          );
+      }
+    }
+
+    return matrix[b.length][a.length];
+  }
+
+  // ==============================
+  // HELPERS
   // ==============================
 
   private isPositive(term: string): boolean {

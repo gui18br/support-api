@@ -10,34 +10,57 @@ export class AnalyzeSentimentUseCase {
   ) {}
 
   execute(sentiment: Sentiment): SentimentResult {
+    // Tempo inicial do processamento
     const startTime = Date.now();
 
+    // CPU usada antes do job
     const cpuBefore = process.cpuUsage();
+
+    // Heap usado antes
     const memBefore = process.memoryUsage();
 
     try {
       const result = this.analyzer.analyze(sentiment);
 
+      // contador de análises realizadas
       this.metrics.incrementRequest(result.label);
 
       return result;
     } catch (error) {
+      // contador de erros
       this.metrics.incrementError();
       throw error;
     } finally {
+      // -------------------------
+      // Tempo de execução
+      // -------------------------
+
       const duration = Date.now() - startTime;
+
+      // tempo de processamento do job
       this.metrics.observeProcessingTime(duration);
 
+      // -------------------------
+      // CPU usada pelo job
+      // -------------------------
+
       const cpuAfter = process.cpuUsage(cpuBefore);
+
+      // cpuUsage retorna microssegundos
       const cpuSeconds = (cpuAfter.user + cpuAfter.system) / 1_000_000;
 
       this.metrics.observeCpuUsage(cpuSeconds);
 
+      // -------------------------
+      // Memória heap usada
+      // -------------------------
+
       const memAfter = process.memoryUsage();
 
-      this.metrics.observeHeapUsage(memAfter.heapUsed - memBefore.heapUsed);
+      const heapDiff = memAfter.heapUsed - memBefore.heapUsed;
 
-      this.metrics.observeRssUsage(memAfter.rss - memBefore.rss);
+      // registra quanto o heap variou durante o job
+      this.metrics.observeHeapUsage(heapDiff);
     }
   }
 }

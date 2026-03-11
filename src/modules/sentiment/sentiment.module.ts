@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { SimpleSentimentAnalyzer } from './infrastructure/simple-sentiment-analyzer';
+import { AdvancedSentimentAnalyzer } from './infrastructure/simple-sentiment-analyzer';
 import { AnalyzeSentimentUseCase } from './application/use-cases/analyse-sentiment.usecase';
 import { feedbackUseCasesProviders } from './sentiment.usecases.provider';
 import { PrometheusSentimentMetrics } from './infrastructure/metrics/prometheus-sentiment.metrics';
@@ -9,7 +9,7 @@ import { PrometheusSentimentMetrics } from './infrastructure/metrics/prometheus-
   providers: [
     {
       provide: 'SimpleSentimentAnalyzer',
-      useClass: SimpleSentimentAnalyzer,
+      useClass: AdvancedSentimentAnalyzer,
     },
     {
       provide: 'SentimentMetricsPort',

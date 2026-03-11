@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { AnalyzeFeedbackSentimentsJob } from '../../application/jobs/analyze-feedback-sentiments.job';
+import { AnalyzeFeedbacksOrchestrator } from '../../application/orchestrators/analyze-feedbacks.orchestrator';
 
 @Injectable()
 export class AnalyzeFeedbackSentimentsScheduler {
   private running = false;
 
-  constructor(private readonly job: AnalyzeFeedbackSentimentsJob) {}
+  constructor(private readonly orchestrator: AnalyzeFeedbacksOrchestrator) {}
 
   @Cron('*/5 * * * *')
   async handleCron(): Promise<void> {
@@ -16,7 +16,7 @@ export class AnalyzeFeedbackSentimentsScheduler {
 
     this.running = true;
     try {
-      await this.job.run();
+      await this.orchestrator.run();
     } finally {
       this.running = false;
     }

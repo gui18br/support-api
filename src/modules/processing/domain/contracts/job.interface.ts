@@ -1,4 +1,4 @@
 export interface Job {
   name: string;
-  run(): Promise<void>;
+  run(offsetStart: number): Promise<void>;
 }
