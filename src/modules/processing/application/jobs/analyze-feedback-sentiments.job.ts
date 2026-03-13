@@ -7,7 +7,8 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
   name = 'analyze-feedback-sentiments';
 
   private readonly BATCH_SIZE = 1000;
-  private readonly CONCURRENCY = 240;
+  private readonly CONCURRENCY = 40;
+  private readonly limit = pLimit(this.CONCURRENCY);
 
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
@@ -22,11 +23,9 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
 
       if (!feedbacks.length) break;
 
-      const limit = pLimit(this.CONCURRENCY);
-
       await Promise.all(
         feedbacks.map((feedback) =>
-          limit(async () => {
+          this.limit(async () => {
             try {
               const result =
                 await this.sentimentAnalyzerGateway.analizarSentimento(
@@ -36,8 +35,8 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
               feedback.analyzeSentiment(result.score, result.label);
 
               await this.feedbackRepository.save(feedback);
-            } catch (error) {
-              console.error(error);
+            } catch (error: any) {
+              console.error('Sentiment MS error:', error?.message);
             }
           }),
         ),
