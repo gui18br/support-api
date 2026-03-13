@@ -11,7 +11,7 @@ export class AnalyzeSentimentUseCase {
 
   execute(sentiment: Sentiment): SentimentResult {
     // Tempo inicial do processamento
-    const startTime = Date.now();
+    const start = process.hrtime.bigint();
 
     // CPU usada antes do job
     const cpuBefore = process.cpuUsage();
@@ -35,10 +35,10 @@ export class AnalyzeSentimentUseCase {
       // Tempo de execução
       // -------------------------
 
-      const duration = Date.now() - startTime;
+      const durationNs = process.hrtime.bigint() - start;
+      const durationSeconds = Number(durationNs) / 1e9;
 
-      // tempo de processamento do job
-      this.metrics.observeProcessingTime(duration);
+      this.metrics.observeProcessingTime(durationSeconds);
 
       // -------------------------
       // CPU usada pelo job

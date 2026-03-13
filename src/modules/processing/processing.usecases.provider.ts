@@ -1,7 +1,7 @@
 import { FeedbackRepository } from '../feedback/domain/repositories/feedback.repository';
 import { AnalyzeSentimentUseCase } from '../sentiment/application/use-cases/analyse-sentiment.usecase';
 import { AnalyzeFeedbackSentimentsJob } from './application/jobs/analyze-feedback-sentiments.job';
-import { AnalyzeFeedbacksOrchestrator } from './application/orchestrators/analyze-feedbacks.orchestrator';
+import { AnalyzeFeedbacksUseCase } from './application/use-cases/analyze-feedbacks.usecase';
 
 export const processingUseCasesProviders = [
   {
@@ -13,9 +13,9 @@ export const processingUseCasesProviders = [
     inject: ['FeedbackRepository', AnalyzeSentimentUseCase],
   },
   {
-    provide: AnalyzeFeedbacksOrchestrator,
+    provide: AnalyzeFeedbacksUseCase,
     useFactory: (job: AnalyzeFeedbackSentimentsJob) =>
-      new AnalyzeFeedbacksOrchestrator(job),
+      new AnalyzeFeedbacksUseCase(job),
     inject: [AnalyzeFeedbackSentimentsJob],
   },
 ];

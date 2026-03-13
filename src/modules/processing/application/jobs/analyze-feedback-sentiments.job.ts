@@ -1,19 +1,21 @@
 import pLimit from 'p-limit';
 import { Job } from '../../domain/contracts/job.interface';
 import { FeedbackRepository } from 'src/modules/feedback/domain/repositories/feedback.repository';
-import { AnalyzeSentimentUseCase } from 'src/modules/sentiment/application/use-cases/analyse-sentiment.usecase';
+import { Feedback } from 'src/modules/feedback/domain/entities/feedback.entity';
+import { SentimentAnalyzer } from 'src/modules/sentiment/domain/repositories/sentiment.repository';
 import { Sentiment } from 'src/modules/sentiment/domain/entities/sentiment.entity';
+import { AnalyzeSentimentUseCase } from 'src/modules/sentiment/application/use-cases/analyse-sentiment.usecase';
 
 export class AnalyzeFeedbackSentimentsJob implements Job {
   name = 'analyze-feedback-sentiments';
 
   private readonly BATCH_SIZE = 1000;
-  private readonly CONCURRENCY = 40;
-  private readonly limit = pLimit(this.CONCURRENCY);
+  private readonly WORKERS = 4;
+  private readonly WORKER_CONCURRENCY = 10;
 
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
-    private readonly analyzeSentiment: AnalyzeSentimentUseCase,
+    private readonly sentimentAnalyzer: AnalyzeSentimentUseCase,
   ) {}
 
   async run(): Promise<void> {
@@ -24,23 +26,43 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
 
       if (!feedbacks.length) break;
 
-      await Promise.all(
-        feedbacks.map((feedback) =>
-          this.limit(async () => {
-            try {
-              const sentiment = new Sentiment(feedback.content);
+      const queues = this.splitIntoWorkers(feedbacks);
 
-              const result = this.analyzeSentiment.execute(sentiment);
+      const workers = queues.map((queue) => this.runWorker(queue));
 
-              feedback.analyzeSentiment(result.score, result.label);
-
-              await this.feedbackRepository.save(feedback);
-            } catch (error) {
-              console.error(error);
-            }
-          }),
-        ),
-      );
+      await Promise.all(workers);
     }
+  }
+
+  private splitIntoWorkers(feedbacks: Feedback[]): Feedback[][] {
+    const queues: Feedback[][] = Array.from({ length: this.WORKERS }, () => []);
+
+    feedbacks.forEach((feedback, index) => {
+      queues[index % this.WORKERS].push(feedback);
+    });
+
+    return queues;
+  }
+
+  private async runWorker(queue: Feedback[]) {
+    const limit = pLimit(this.WORKER_CONCURRENCY);
+
+    await Promise.all(
+      queue.map((feedback) =>
+        limit(async () => {
+          try {
+            const sentiment = new Sentiment(feedback.content);
+
+            const result = await this.sentimentAnalyzer.execute(sentiment);
+
+            feedback.analyzeSentiment(result.score, result.label);
+
+            await this.feedbackRepository.save(feedback);
+          } catch (error: any) {
+            console.error('Sentiment error:', error?.message);
+          }
+        }),
+      ),
+    );
   }
 }
