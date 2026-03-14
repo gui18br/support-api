@@ -6,6 +6,7 @@ import { AnalyzeFeedbackSentimentController } from './infrastructure/controllers
 import { SentimentAnalyzerGateway } from './application/gateways/sentiment-analyzer.gateway';
 import { SentimentAnalyzerGatewayImpl } from './infrastructure/apis/gateway/sentiment-analyzer.gateway.impl';
 import { SentimentAnalyzer } from './infrastructure/apis/sentiment.analyzer';
+import { PrometheusJobMetrics } from './infrastructure/metrics/prometheus-job-metrics';
 
 @Module({
   imports: [FeedbackModule],
@@ -15,6 +16,10 @@ import { SentimentAnalyzer } from './infrastructure/apis/sentiment.analyzer';
     {
       provide: SentimentAnalyzerGateway,
       useClass: SentimentAnalyzerGatewayImpl,
+    },
+    {
+      provide: 'JobMetricsPort',
+      useClass: PrometheusJobMetrics,
     },
   ],
   controllers: [AnalyzeFeedbackSentimentController],

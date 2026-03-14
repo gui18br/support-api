@@ -2,6 +2,7 @@ import pLimit from 'p-limit';
 import { Job } from '../../domain/contracts/job.interface';
 import { FeedbackRepository } from 'src/modules/feedback/domain/repositories/feedback.repository';
 import { SentimentAnalyzerGateway } from '../gateways/sentiment-analyzer.gateway';
+import { JobMetricsPort } from '../ports/job-metrics.port';
 
 export class AnalyzeFeedbackSentimentsJob implements Job {
   name = 'analyze-feedback-sentiments';
@@ -13,6 +14,7 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
     private readonly sentimentAnalyzerGateway: SentimentAnalyzerGateway,
+    private readonly jobMetrics: JobMetricsPort,
   ) {}
 
   async run(): Promise<void> {
@@ -24,8 +26,10 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
       if (!feedbacks.length) break;
 
       await Promise.all(
-        feedbacks.map((feedback) =>
-          this.limit(async () => {
+        feedbacks.map((feedback) => {
+          const jobStart = process.hrtime.bigint();
+
+          return this.limit(async () => {
             try {
               const result =
                 await this.sentimentAnalyzerGateway.analizarSentimento(
@@ -37,9 +41,14 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
               await this.feedbackRepository.save(feedback);
             } catch (error: any) {
               console.error('Sentiment MS error:', error?.message);
+            } finally {
+              const durationSeconds =
+                Number(process.hrtime.bigint() - jobStart) / 1e9;
+
+              this.jobMetrics.observeJobDuration(durationSeconds);
             }
-          }),
-        ),
+          });
+        }),
       );
     }
   }
