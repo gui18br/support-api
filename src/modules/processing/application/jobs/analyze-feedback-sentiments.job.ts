@@ -2,9 +2,9 @@ import pLimit from 'p-limit';
 import { Job } from '../../domain/contracts/job.interface';
 import { FeedbackRepository } from 'src/modules/feedback/domain/repositories/feedback.repository';
 import { Feedback } from 'src/modules/feedback/domain/entities/feedback.entity';
-import { SentimentAnalyzer } from 'src/modules/sentiment/domain/repositories/sentiment.repository';
 import { Sentiment } from 'src/modules/sentiment/domain/entities/sentiment.entity';
 import { AnalyzeSentimentUseCase } from 'src/modules/sentiment/application/use-cases/analyse-sentiment.usecase';
+import { JobMetricsPort } from '../ports/job-metrics.port';
 
 export class AnalyzeFeedbackSentimentsJob implements Job {
   name = 'analyze-feedback-sentiments';
@@ -16,6 +16,7 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
     private readonly sentimentAnalyzer: AnalyzeSentimentUseCase,
+    private readonly jobMetrics: JobMetricsPort,
   ) {}
 
   async run(): Promise<void> {
@@ -48,8 +49,10 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
     const limit = pLimit(this.WORKER_CONCURRENCY);
 
     await Promise.all(
-      queue.map((feedback) =>
-        limit(async () => {
+      queue.map((feedback) => {
+        const jobStart = process.hrtime.bigint();
+
+        return limit(async () => {
           try {
             const sentiment = new Sentiment(feedback.content);
 
@@ -60,9 +63,14 @@ export class AnalyzeFeedbackSentimentsJob implements Job {
             await this.feedbackRepository.save(feedback);
           } catch (error: any) {
             console.error('Sentiment error:', error?.message);
+          } finally {
+            const durationSeconds =
+              Number(process.hrtime.bigint() - jobStart) / 1e9;
+
+            this.jobMetrics.observeJobDuration(durationSeconds);
           }
-        }),
-      ),
+        });
+      }),
     );
   }
 }
